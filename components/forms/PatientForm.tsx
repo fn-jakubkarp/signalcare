@@ -3,30 +3,23 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import CustomFormField from "./CustomFormField";
-import SubmitButton from "../SubmitButton";
-import { useState } from "react";
 
-import { UserFormValidation as formSchema } from "@/lib/validation";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export enum FormFieldType {
-	INPUT = "input",
-	CHECKBOX = "checkbox",
-	TEXTAREA = "textarea",
-	PHONE_INPUT = "phoneInput",
-	DATE_PICKER = "datePicker",
-	SELECT = "select",
-	SKELETON = "skeleton"
-}
+import { createUser } from "@/lib/actions/patient.actions";
+import { UserFormValidation } from "@/lib/validation";
+import CustomFormField, { FormFieldType } from "./CustomFormField";
+
+import { Form } from "@/components/ui/form";
+import SubmitButton from "../SubmitButton";
 
 const PatientForm = () => {
+	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
 
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
+	const form = useForm<z.infer<typeof UserFormValidation>>({
+		resolver: zodResolver(UserFormValidation),
 		defaultValues: {
 			name: "",
 			email: "",
@@ -34,24 +27,44 @@ const PatientForm = () => {
 		}
 	});
 
-	async function onSubmit({
-		name,
-		email,
-		phone
-	}: z.infer<typeof formSchema>) {
+	const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
+		console.log("onSubmit function called with values:", values);
 		setIsLoading(true);
 
 		try {
-			// const userData = { name, email, phone };
+			console.log("Preparing user data");
+			const userData = {
+				name: values.name,
+				email: values.email,
+				phone: values.phone
+			};
 
-            // const user = await createUser(userData);
+			console.log("Calling createUser with userData:", userData);
+			const newUser = await createUser(userData);
 
-            // if (user) router.push(`/patients/${user.id}/register`);
+			console.log("createUser response:", newUser);
 
+			if (newUser) {
+				console.log(
+					"New user created successfully, preparing to redirect"
+				);
+				setTimeout(() => {
+					console.log(
+						"Attempting to redirect to:",
+						`/patients/${newUser.$id}/register`
+					);
+					router.push(`/patients/${newUser.$id}/register`);
+				}, 0);
+			} else {
+				console.log("createUser didn't return a user object");
+			}
 		} catch (error) {
-			console.log(error);
+			console.error("Error in onSubmit function:", error);
+		} finally {
+			console.log("Setting isLoading to false");
+			setIsLoading(false);
 		}
-	}
+	};
 
 	return (
 		<Form {...form}>
