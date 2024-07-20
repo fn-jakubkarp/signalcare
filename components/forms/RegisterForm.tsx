@@ -1,18 +1,29 @@
 "use client";
-
+// Forms
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+// React libs
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
 import { useForm } from "react-hook-form";
-import { Form, FormControl } from "@/components/ui/form";
 
+// Register and validate
+import { registerPatient } from "@/lib/actions/patient.actions";
+import { PatientFormValidation } from "@/lib/validation";
+
+import { FileUploader } from "../FileUploader";
+import CustomFormField, { FormFieldType } from "./CustomFormField";
+
+// UI elements
+import { Form, FormControl } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SelectItem } from "@/components/ui/select";
+import SubmitButton from "../SubmitButton";
+
+// Data source
 import {
 	Doctors,
 	GenderOptions,
@@ -20,15 +31,10 @@ import {
 	PatientFormDefaultValues
 } from "@/constants";
 
-// import { registerPatient } from "@/lib/actions/patient.actions";
-import { PatientFormValidation } from "@/lib/validation";
-
+// Styles
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
-import CustomFormField, { FormFieldType } from "./CustomFormField";
-// import { FileUploader } from "../FileUploader";
-import SubmitButton from "../SubmitButton";
-import { registerPatient } from "@/lib/actions/patient.actions";
+
 
 const RegisterForm = ({ user }: { user: User }) => {
 	const router = useRouter();
@@ -37,49 +43,47 @@ const RegisterForm = ({ user }: { user: User }) => {
 	const form = useForm<z.infer<typeof PatientFormValidation>>({
 		resolver: zodResolver(PatientFormValidation),
 		defaultValues: {
-			...PatientFormDefaultValues,
-			name: "",
-			email: "",
-			phone: ""
+			...PatientFormDefaultValues
 		}
 	});
 
 	async function onSubmit(values: z.infer<typeof PatientFormValidation>) {
-    setIsLoading(true);
+		setIsLoading(true);
 
-    let formData;
+		let formData;
 
-    if (values.identificationDocument && values.identificationDocument.length > 0) {
-      const blobFile = new Blob([values.identificationDocument[0]], {
-        type: values.identificationDocument[0].type
-      })
+		if (
+			values.identificationDocument &&
+			values.identificationDocument.length > 0
+		) {
+			const blobFile = new Blob([values.identificationDocument[0]], {
+				type: values.identificationDocument[0].type
+			});
 
-      formData = new FormData();
-      formData.append("blobFile", blobFile)
-      formData.append("fileName", values.identificationDocument[0].name)
-    }
+			formData = new FormData();
+			formData.append("blobFile", blobFile);
+			formData.append("fileName", values.identificationDocument[0].name);
+		}
 
-    try {
-      const patientData = {
-        ...values,
-        userId: user.$id,
-        birthDate: new Date(values.birthDate),
-        identificationDocument: formData,
-      }
-      // @ts-ignore
-      const patient = await registerPatient(patientData)
+		try {
+			const patientData = {
+				...values,
+				userId: user.$id,
+				birthDate: new Date(values.birthDate),
+				identificationDocument: formData
+			};
+			// @ts-ignore
+			const patient = await registerPatient(patientData);
 
-      if(patient) router.push(`/patients/${user.$id}/new-appointment`)
-
-    } catch (error) {
-      console.error(error);
-    }
-
-  }
+			if (patient) router.push(`/patients/${user.$id}/new-appointment`);
+		} catch (error) {
+			console.error(error);
+		}
+	}
 	return (
 		<Form {...form}>
 			<form
-				// onSubmit={form.handleSubmit(onSubmit)}
+				onSubmit={form.handleSubmit(onSubmit)}
 				className="flex-1 space-y-12"
 			>
 				<section className="space-y-4">
@@ -327,17 +331,20 @@ const RegisterForm = ({ user }: { user: User }) => {
 						placeholder="123456789"
 					/>
 
-					{/* <CustomFormField
-            fieldType={FormFieldType.SKELETON}
-            control={form.control}
-            name="identificationDocument"
-            label="Scanned Copy of Identification Document"
-            renderSkeleton={(field) => (
-              <FormControl>
-                <FileUploader files={field.value} onChange={field.onChange} />
-              </FormControl>
-            )}
-          /> */}
+					<CustomFormField
+						fieldType={FormFieldType.SKELETON}
+						control={form.control}
+						name="identificationDocument"
+						label="Scanned Copy of Identification Document"
+						renderSkeleton={(field) => (
+							<FormControl>
+								<FileUploader
+									files={field.value}
+									onChange={field.onChange}
+								/>
+							</FormControl>
+						)}
+					/>
 				</section>
 
 				<section className="space-y-6">
