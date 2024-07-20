@@ -14,7 +14,6 @@ import {
 } from "../appwrite.config";
 import { parseStringify } from "../utils";
 
-
 export const createUser = async (user: CreateUserParams) => {
 	try {
 		const newuser = await users.create(
@@ -40,17 +39,18 @@ export const createUser = async (user: CreateUserParams) => {
 };
 
 export const getUser = async (userId: string) => {
-	try {
-		const user = await users.get(userId);
+  try {
+    const user = await users.get(userId);
 
-		return parseStringify(user);
-	} catch (error) {
-		console.error(
-			"An error occurred while retrieving the user details:",
-			error
-		);
-	}
+    return parseStringify(user);
+  } catch (error) {
+    console.error(
+      "An error occurred while retrieving the user details:",
+      error
+    );
+  }
 };
+
 
 export const registerPatient = async ({
 	identificationDocument,
